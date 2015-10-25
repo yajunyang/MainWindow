@@ -16,7 +16,6 @@ DialogTrans::DialogTrans(QWidget *parent) :
 DialogTrans::~DialogTrans()
 {
     delete ui;
-//    cvReleaseMat(&(mcvJuanji.kernel));
 }
 
 /// ![0]

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
@@ -7,6 +7,19 @@
 #include <QScrollArea>
 #include <QtPrintSupport/QPrintDialog>
 #include <QPainter>
+
+#include "Image2.h"
+#include <vector>
+#include <iostream>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/legacy/legacy.hpp>
+#include <cstdio>
+#include <string>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -89,6 +102,113 @@ void MainWindow::save()
 void MainWindow::saveAs()
 {
 
+}
+
+void MainWindow::level_set()
+{
+    IplImage * image=cvLoadImage("E:/yang.jpg",1);// 声纳.jpg    1-28.BMP
+    CvSize size=cvGetSize(image);
+    int i,j;
+    IplImage * image_gray_a=cvCreateImage(cvGetSize(image),IPL_DEPTH_8U,1);
+    IplImage * display1=cvCreateImage(cvGetSize(image),IPL_DEPTH_8U,1);
+    IplImage * display2=cvCreateImage(cvGetSize(image),IPL_DEPTH_8U,1);
+    IplImage * display3=cvCreateImage(cvGetSize(image),IPL_DEPTH_8U,1);
+    IplImage * display_contour=cvCreateImage(cvGetSize(image),IPL_DEPTH_8U,3);
+    IplImage * imgDisplay=cvCreateImage(cvGetSize(image),IPL_DEPTH_8U,3);
+
+    IplImage * image32=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * imgGauss=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * image_laplace=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * imgG=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * imgU=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * imgU_temp=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * Ix=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * Iy=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+    IplImage * Edge=cvCreateImage(cvGetSize(image),IPL_DEPTH_32F,1);
+
+
+    int iterNum = 850;
+
+    cvCvtColor(image,image_gray_a,CV_BGR2GRAY);
+    cvConvertScale(image_gray_a,image32,1,0);
+    cvSmooth(image32,imgGauss,CV_GAUSSIAN,0,0,1.5,0);
+
+    Sobel(imgGauss,Ix,Iy);
+
+    CvScalar cur,cur1,cur2;
+    for (i=0; i<size.height; i++)
+    {
+        for(j=0; j<size.width; j++)
+        {
+            cur1 = cvGet2D(Ix,i,j);
+            cur2 = cvGet2D(Iy,i,j);
+            cur.val[0] = 1.0/(1.0+cur1.val[0]*cur1.val[0]+cur2.val[0]*cur2.val[0]);
+            cvSet2D(imgG,i,j,cur);
+        }
+    }
+
+    int w=15;
+    int w2=0;
+    double c0=14.0;
+    //define initial level set function (LSF) as -c0, 0, c0 at points outside, on
+    //the boundary, and inside of a region R, respectively.
+    for (i=0; i<size.height; i++)
+    {
+        for(j=0; j<size.width; j++)
+        {
+            if (i<w || i>size.height-w-1 || j<w || j>size.width-w-1)
+            {
+                cur.val[0] = c0;
+            }
+            else if (i>w && i<size.height-w-1 && j>w && j<size.width-w-1)
+            {
+                cur.val[0] = -c0;
+            }
+            else cur.val[0] = 0;
+            // Note: this can be commented out. The intial LSF does NOT necessarily need a zero level set.
+            cvSet2D(imgU,i,j,cur);
+        }
+    }
+
+    //ImgDraw(image, imgU, imgDisplay);
+    //cvNamedWindow("LevelSet");
+    //cvShowImage("LevelSet",imgDisplay);
+    //cvWaitKey(0);
+    double epsilon=1.5;//1.5
+    double timestep=7;//7
+    double lambda=10;//5
+    double mu=0.2/timestep;
+    double alf=10.5;//1.5
+    for (int k=0;k<iterNum;k++)
+    {
+        Evolution2(imgU,imgG,lambda,mu,alf,epsilon,timestep,1);
+
+        if (k%20==0)
+        {
+            ImgDraw(image, imgU, imgDisplay);
+            cvShowImage("LevelSet",imgDisplay);
+            cvWaitKey(20);
+        }
+    }
+
+    cvWaitKey(0);
+
+    cvDestroyAllWindows();
+    cvReleaseImage(&image_gray_a);
+    cvReleaseImage(&display1);
+    cvReleaseImage(&display2);
+    cvReleaseImage(&display3);
+    cvReleaseImage(&display_contour);
+    cvReleaseImage(&imgDisplay);
+    cvReleaseImage(&Ix);
+    cvReleaseImage(&Iy);
+    cvReleaseImage(&imgG);
+    cvReleaseImage(&imgU);
+    cvReleaseImage(&imgU_temp);
+    cvReleaseImage(&imgGauss);
+    cvReleaseImage(&image32);
+    cvReleaseImage(&image_laplace);
+    cvReleaseImage(&image);
 }
 
 void MainWindow::zoomIn()
@@ -178,6 +298,8 @@ void MainWindow::connectUiToFunction()
     connect(ui->actionPrint, SIGNAL(triggered()), this, SLOT(print()));
     connect(ui->actionHelp, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionFit_to_Window, SIGNAL(triggered()), this, SLOT(fitToWindow()));
+
+    connect(ui->actionLevel_Set_Segmentation, SIGNAL(triggered()), this, SLOT(level_set()));
 }
 
 // ![0]

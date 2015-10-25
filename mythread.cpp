@@ -74,15 +74,10 @@ osg::ref_ptr<osg::Node> MyThread::CraetePlane(QString fileName)
 void MyThread::run()
 {
     osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
-
-//    osg::ArgumentParser arguments(&argc, argv);
-//    arguments.getApplicationUsage()->setApplicationName(arguments.getApplicationName());
-//    arguments.getApplicationUsage()->setDescription("Help Information");
-
     osg::ref_ptr<osg::Group> root = new osg::Group;
 
     root->addChild(CraetePlane(filename));
-   // root->addChild()
+//    root->addChild();
 
     viewer->setSceneData(root.get());
 

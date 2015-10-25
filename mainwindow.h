@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QtPrintSupport/QPrinter>
@@ -45,6 +45,8 @@ private slots:
     void open();
     void save();
     void saveAs();
+
+    void level_set();
 
     void zoomIn();
     void zoomOut();

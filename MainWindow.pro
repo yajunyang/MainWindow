@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     linktrans.cpp \
     dialogcustom.cpp \
     linkcustom.cpp \
-    dialogvideo.cpp
+    dialogvideo.cpp \
+    image2.cpp
 
 HEADERS  += mainwindow.h \
     dialogpro.h \
@@ -34,7 +35,8 @@ HEADERS  += mainwindow.h \
     linktrans.h \
     dialogcustom.h \
     linkcustom.h \
-    dialogvideo.h
+    dialogvideo.h \
+    image2.h
 
 FORMS    += mainwindow.ui \
     dialogpro.ui \

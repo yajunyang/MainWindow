@@ -51,6 +51,8 @@
     </property>
     <addaction name="actionImgPro"/>
     <addaction name="actionImgTrans"/>
+    <addaction name="separator"/>
+    <addaction name="actionLevel_Set_Segmentation"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -133,6 +135,11 @@
   <action name="actionImgTrans">
    <property name="text">
     <string>ImgTrans</string>
+   </property>
+  </action>
+  <action name="actionLevel_Set_Segmentation">
+   <property name="text">
+    <string>Level-Set Segmentation</string>
    </property>
   </action>
  </widget>
